@@ -1,7 +1,6 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Tabs } from "expo-router";
 import React from "react";
-import { Appbar, BottomNavigation, useTheme } from "react-native-paper";
+import { Appbar, BottomNavigation, Icon, useTheme } from "react-native-paper";
 
 export const headerContext = React.createContext({
     headerIsElevated: false,
@@ -54,10 +53,14 @@ export default function TabLayout() {
                     />
                 )}
             >
-                <Tabs.Screen name="library" options={{title: "Library", tabBarIcon: ({focused, color}) => <MaterialCommunityIcons name={focused ? "book" : "book-outline"} size={24} color={color} />}} />
+                {/* <Tabs.Screen name="library" options={{title: "Library", tabBarIcon: ({focused, color}) => <MaterialCommunityIcons name={focused ? "book" : "book-outline"} size={24} color={color} />}} />
                 <Tabs.Screen name="discover" options={{title: "Discover", tabBarIcon: ({focused, color}) => <MaterialCommunityIcons name={focused ? "compass" : "compass-outline"} size={24} color={color} />}} />
                 <Tabs.Screen name="write" options={{title: "Blog", tabBarIcon: ({focused, color}) => <MaterialCommunityIcons name={focused ? "pencil" : "pencil-outline"} size={24} color={color} />}} />
-                <Tabs.Screen name="account" options={{title: "Account", tabBarIcon: ({focused, color}) => <MaterialCommunityIcons name={focused ? "account" : "account-outline"} size={24} color={color} />}} />
+                <Tabs.Screen name="account" options={{title: "Account", tabBarIcon: ({focused, color}) => <MaterialCommunityIcons name={focused ? "account" : "account-outline"} size={24} color={color} />}} /> */}
+                <Tabs.Screen name="library" options={{title: "Library", tabBarIcon: ({focused, color}) => <Icon source={focused ? "bookshelf" : "bookshelf"} size={24} color={color} />}} />
+                <Tabs.Screen name="discover" options={{title: "Discover", tabBarIcon: ({focused, color}) => <Icon source={focused ? "compass" : "compass-outline"} size={24} color={color} />}} />
+                <Tabs.Screen name="write" options={{title: "Blog", tabBarIcon: ({focused, color}) => <Icon source={focused ? "pencil" : "pencil-outline"} size={24} color={color} />}} />
+                <Tabs.Screen name="account" options={{title: "Account", tabBarIcon: ({focused, color}) => <Icon source={focused ? "account" : "account-outline"} size={24} color={color} />}} />
             </Tabs>
         </headerContext.Provider>
     );

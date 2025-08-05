@@ -1,8 +1,8 @@
 import { useOrganization, useOrganizationList } from '@clerk/clerk-expo';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Tabs } from "expo-router";
-import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Appbar, Avatar, Card, FAB, IconButton, Menu, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -15,22 +15,99 @@ export default function Write() {
     const currentOrganization = useOrganization();
     const insets = useSafeAreaInsets();
     const [menuVisible, setMenuVisible] = useState(false);
-    const [headerIsElevated, setHeaderIsElevated] = useState(false);
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const [isElevated, setIsElevated] = useState(false);
+    
+    // Handle scroll events to update elevated state
+    const handleScroll = Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        {
+            useNativeDriver: false,
+            listener: (event: { nativeEvent: { contentOffset: { y: number } } }) => {
+                // Update elevated state based on scroll position
+                // Header will elevate when scrolled down enough to make the header text fully visible
+                // The value 50 matches the inputRange in headerOpacity interpolation
+                const offsetY = event.nativeEvent.contentOffset.y;
+                setIsElevated(offsetY >= 50);
+            },
+        }
+    );
+    
+    // Initialize header state when component mounts
+    useEffect(() => {
+        setIsElevated(false);
+        return () => {
+            // Cleanup if needed
+        };
+    }, []);
+    
+    // Header animation interpolation
+    const headerOpacity = scrollY.interpolate({
+        inputRange: [0, 50],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+
+    const titleOpacity = scrollY.interpolate({
+        inputRange: [0, 25],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+    });
     return (
         <View style={styles.container}>
             <Tabs.Screen options={{headerShown: false}} />
-            <Appbar.Header statusBarHeight={insets.top} elevated={headerIsElevated} mode='large'>
-                <Appbar.Content 
-                    title={<Menu visible={menuVisible} anchor={<TouchableOpacity onPress={() => setMenuVisible(!menuVisible)} style={styles.headerTitle}><Text variant="titleLarge" style={{color: theme.colors.onBackground}}>{currentOrganization?.organization?.name + " (" + currentOrganization?.organization?.slug + ")"}</Text><MaterialCommunityIcons name="chevron-down" size={24} color={theme.colors.onBackground} /></TouchableOpacity>} onDismiss={() => setMenuVisible(false)}>
-                        {organizations.userMemberships?.data?.map((org) => (
-                            <Menu.Item key={org.id} title={org.organization.name} onPress={() => {organizations.setActive?.({organization: org.organization}); setMenuVisible(false)}} />
-                        ))}
-                    </Menu>}
+            <Appbar.Header 
+                statusBarHeight={insets.top} 
+                elevated={isElevated}
+            >
+                <Appbar.Content
+                    title={
+                        <Animated.View style={{ opacity: headerOpacity }}>
+                            <Text 
+                                variant="titleLarge" 
+                                numberOfLines={1}
+                                style={{ color: theme.colors.onBackground }}
+                            >
+                                {currentOrganization?.organization?.name}
+                            </Text>
+                        </Animated.View>
+                    }
                 />
-                <Appbar.Action icon="cog-outline" onPress={() => console.log('Settings')} />
-                <Appbar.Action icon="account-group-outline" onPress={() => console.log('Users')} />
+                <Appbar.Action icon="account-group" onPress={() => console.log('Edit')} />
+                <Appbar.Action icon="cog" onPress={() => console.log('Delete')} />
             </Appbar.Header>
-            <ScrollView style={styles.scrollContainer} onScroll={(e) => setHeaderIsElevated(e.nativeEvent.contentOffset.y > 1)} scrollEventThrottle={5}>
+            <Animated.ScrollView 
+                style={styles.scrollContainer}
+                contentContainerStyle={{ paddingBottom: 16 }}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+            >
+                <Animated.View style={{ opacity: titleOpacity, marginBottom: 16 }}>
+                    <Menu visible={menuVisible} 
+                          anchor={
+                              <TouchableOpacity 
+                                  onPress={() => setMenuVisible(!menuVisible)} 
+                                  style={styles.headerTitle}
+                              >
+                                  <Text variant="titleLarge" style={{color: theme.colors.onBackground}}>
+                                      {currentOrganization?.organization?.name + " (" + currentOrganization?.organization?.slug + ")"}
+                                  </Text>
+                                  <MaterialCommunityIcons name="chevron-down" size={24} color={theme.colors.onBackground} />
+                              </TouchableOpacity>
+                          } 
+                          onDismiss={() => setMenuVisible(false)}>
+                        {organizations.userMemberships?.data?.map((org) => (
+                            <Menu.Item 
+                                key={org.id} 
+                                title={org.organization.name} 
+                                onPress={() => {
+                                    organizations.setActive?.({organization: org.organization}); 
+                                    setMenuVisible(false);
+                                }} 
+                            />
+                        ))}
+                    </Menu>
+                </Animated.View>
                 <PostCard />
                 <PostCard />
                 <PostCard />
@@ -40,7 +117,7 @@ export default function Write() {
                 <PostCard />
                 <PostCard />
                 <FabSpacer />
-            </ScrollView>
+            </Animated.ScrollView>
             <FAB
                 icon="plus"
                 style={styles.fab}
