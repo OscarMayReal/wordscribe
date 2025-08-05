@@ -1,9 +1,10 @@
 import { useContent } from "@/lib/content";
-import { setBookmarkRead, useBookmarkInfo } from "@/lib/lists";
+import { deleteBookmark, setBookmarkRead, useBookmarkInfo } from "@/lib/lists";
 import { useOGInfo } from "@/lib/opengraph";
 import { useAuth } from "@clerk/clerk-expo";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { Dimensions, Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Dimensions, Image, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ActivityIndicator, Appbar, Divider, Icon, TouchableRipple, useTheme } from "react-native-paper";
 import RenderHTML from "react-native-render-html";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,11 +19,12 @@ export default function BookmarkDetails() {
     const content = useContent(params.bookmarkid as string);
     const insets = useSafeAreaInsets();
     const auth = useAuth();
+    const [headerRaised, setHeaderRaised] = useState(false);
     return (
-        <ScrollView>
+        <ScrollView onScroll={(e) => setHeaderRaised(e.nativeEvent.contentOffset.y > 1)} scrollEventThrottle={16}>
             <Stack.Screen options={{
                 headerShown: true,
-                header: () => <Appbar.Header>
+                header: () => <Appbar.Header elevated={headerRaised}>
                     <Appbar.BackAction onPress={() => router.back()} />
                     <Appbar.Content title={bookmarkInfo.data?.title} />
                 </Appbar.Header>,
@@ -31,7 +33,21 @@ export default function BookmarkDetails() {
             <View style={styles.actionRow}>
                 <StackedButton icon="open-in-new" onPress={() => Linking.openURL(bookmarkInfo.data?.url as string)} title="Open" />
                 {!bookmarkInfo.data?.readBy?.includes(auth.userId) ? <StackedButton icon="eye" onPress={() => {setBookmarkRead(params.bookmarkid as string, true); bookmarkInfo.refresh();}} title="Mark Read" /> : <StackedButton icon="eye-off" onPress={() => {setBookmarkRead(params.bookmarkid as string, false); bookmarkInfo.refresh();}} title="Mark Unread" />}
-                <StackedButton icon="delete" onPress={() => {console.log("Deleting bookmark")}} title="Delete" />
+                <StackedButton icon="delete" onPress={() => {Alert.alert("Delete bookmark", "Are you sure you want to delete this bookmark?", [
+                    {
+                        text: "Cancel",
+                        onPress: () => console.log("Cancel Pressed"),
+                        style: "cancel",
+                    },
+                    {
+                        text: "Delete",
+                        onPress: () => {
+                            deleteBookmark(params.bookmarkid as string).then(() => {
+                                router.back();
+                            });
+                        },
+                    },
+                ]);}} title="Delete" />
             </View>
             <Divider />
             <View style={{padding: 20}}>

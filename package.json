@@ -28,6 +28,7 @@
     "expo-linking": "~7.1.7",
     "expo-router": "~5.1.4",
     "expo-secure-store": "^14.2.3",
+    "expo-share-intent": "4.0",
     "expo-splash-screen": "~0.30.10",
     "expo-status-bar": "~2.2.3",
     "expo-symbols": "~0.4.5",
@@ -36,6 +37,7 @@
     "jsdom": "^26.1.0",
     "jsdom-jscore-rn": "^0.1.9",
     "link-preview-js": "^3.1.0",
+    "patch-package": "^8.0.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
@@ -55,5 +57,6 @@
     "eslint-config-expo": "~9.2.0",
     "typescript": "~5.8.3"
   },
+  "postinstall": "patch-package",
   "private": true
 }

@@ -167,3 +167,54 @@ export const setBookmarkRead = async (bookmarkId: string, state: boolean) => {
         })
     })
 }
+
+export async function deleteBookmark(bookmarkId: string) {
+    const auth = getClerkInstance();
+    console.log("Deleting bookmark");
+    while (!auth.loaded) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log("Waiting for auth");
+    }
+    console.log("Auth loaded");
+    auth.session?.getToken().then(async (token) => {
+        await fetch(process.env.EXPO_PUBLIC_API_URL + "/v1/bookmarks/" + bookmarkId + "/delete", {
+            method: "DELETE",
+            redirect: "follow",
+            headers: {
+                "Authorization": "Bearer " + token,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            return data;
+        })
+    })
+}
+
+export const createBookmark = async (listId: string, title: string, url: string) => {
+    const auth = getClerkInstance();
+    console.log("Creating bookmark");
+    while (!auth.loaded) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log("Waiting for auth");
+    }
+    console.log("Auth loaded");
+    auth.session?.getToken().then((token) => {
+        fetch(process.env.EXPO_PUBLIC_API_URL + "/v1/lists/" + listId + "/bookmarks", {
+            method: "POST",
+            redirect: "follow",
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            body: JSON.stringify({title, url}),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            return data;
+        })
+    })
+}
