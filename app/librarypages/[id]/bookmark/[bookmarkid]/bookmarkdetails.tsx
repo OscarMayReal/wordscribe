@@ -79,7 +79,7 @@ var styles = StyleSheet.create({
     },
 });
 
-function StackedButton({icon, onPress, title}: {icon: string, onPress: () => void, title: string}) {
+export function StackedButton({icon, onPress, title}: {icon: string, onPress: () => void, title: string}) {
     const theme = useTheme();
     return (
         <TouchableRipple onPress={onPress} style={{width: "33.33%"}}>
