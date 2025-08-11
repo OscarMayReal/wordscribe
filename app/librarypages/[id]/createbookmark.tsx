@@ -29,9 +29,9 @@ export default function CreateBookmark({shareintentMode, name, previewurl}: {sha
                 </Appbar.Header>,
             }} />
             <View style={{padding: 20, paddingTop: 0, gap: 16}}>
-                <TextInput label="Title" value={title} onChangeText={setTitle} />
-                <TextInput label="URL" value={url} onChangeText={setUrl} />
-                {shareintentMode && <Menu style={{width: screensize.width - 40, marginTop: 55}} anchor={<TouchableRipple onPress={() => setVisible(true)}><TextInput label="Collection" value={collection.name} editable={false} /></TouchableRipple>} visible={visible} onDismiss={() => setVisible(false)}>
+                <TextInput mode="outlined" label="Title" value={title} onChangeText={setTitle} />
+                <TextInput mode="outlined" label="URL" value={url} onChangeText={setUrl} />
+                {shareintentMode && <Menu style={{width: screensize.width - 40, marginTop: 55}} anchor={<TouchableRipple onPress={() => setVisible(true)}><TextInput mode="outlined" label="Collection" value={collection.name} editable={false} /></TouchableRipple>} visible={visible} onDismiss={() => setVisible(false)}>
                     {lists.data?.map((list) => (
                         <Menu.Item key={list.id} title={list.name} onPress={() => {setCollection(list); setVisible(false)}} />
                     ))}

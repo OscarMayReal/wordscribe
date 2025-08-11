@@ -1,8 +1,8 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { reloadAppAsync } from "expo";
 import { Image, StyleSheet, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
-
 export default function Account() {
     const auth = useAuth();
     const user = useUser();
@@ -18,18 +18,18 @@ export default function Account() {
                     <Text style={[styles.email, {color: theme.colors.secondary}]}>@{user?.user?.username}</Text>
                 </View>
                 <View style={styles.buttonRow}>
-                    <Button mode="contained-tonal" elevation={1} style={styles.buttonRowButton} onPress={() => console.log('Pressed')}>
+                    <Button mode="contained-tonal" elevation={1} style={styles.buttonRowButton} onPress={async () => {await auth.signOut(); reloadAppAsync();}}>
                         <View style={styles.buttonRowButtonContent}>
                             <MaterialCommunityIcons name="logout" size={20} color={theme.colors.secondary} />
                             <Text style={{fontSize: 16, color: theme.colors.secondary}}>Logout</Text>
                         </View>
                     </Button>
-                    <Button mode="contained-tonal" elevation={1} style={styles.buttonRowButton} onPress={() => console.log('Pressed')}>
+                    {/* <Button mode="contained-tonal" elevation={1} style={styles.buttonRowButton} onPress={() => console.log('Pressed')}>
                         <View style={styles.buttonRowButtonContent}>
                             <MaterialCommunityIcons name="share-variant" size={20} color={theme.colors.secondary} />
                             <Text style={{fontSize: 16, color: theme.colors.secondary}}>Share</Text>
                         </View>
-                    </Button>
+                    </Button> */}
                 </View>
             </View>
         </View>

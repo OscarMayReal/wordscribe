@@ -97,3 +97,28 @@ export function useFeedParser(url: string) {
     }
     return feed;
 }
+
+export function useFeedInfo(id: string) {
+    const { getToken, isLoaded } = useAuth()
+    const refresh = () => {
+        setFeed({loaded: false, data: null, refresh});
+    };
+    const [feed, setFeed] = useState({loaded: false, data: null as Feed | null, refresh});
+    if (!feed.loaded && id !== "" && id !== undefined && id !== null) {
+        getToken().then((token) => {
+            fetch(process.env.EXPO_PUBLIC_API_URL + "/v1/rssfeed/id/" + id + "/info", {
+                method: "GET",
+                redirect: "follow",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                setFeed({loaded: true, data, refresh});
+            })
+        })
+    }
+    return feed;
+}

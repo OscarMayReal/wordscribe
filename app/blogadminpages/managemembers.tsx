@@ -1,4 +1,5 @@
-import { useAuth, useOrganization } from "@clerk/clerk-expo";
+import { useBlogInfo } from "@/lib/blog";
+import { useOrganization } from "@clerk/clerk-expo";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
@@ -9,6 +10,9 @@ export default function AddFeed() {
         memberships: true,
         invitations: true,
     });
+    const blog = useBlogInfo(organization.organization?.slug)
+
+    const hasActiveSubscription = blog.data.plan == "blog_pro"
     const router = useRouter();
     const [showingAddMember, setShowingAddMember] = useState(false);
     return (
@@ -19,7 +23,7 @@ export default function AddFeed() {
             </Appbar.Header>}} />
             <List.Section>
                 <List.Subheader>Members</List.Subheader>
-                {!showingAddMember ? <AddMemberButton setShowingAddMember={setShowingAddMember} /> : <AddMemberForm setShowingAddMember={setShowingAddMember} />}
+                {!showingAddMember ? <AddMemberButton setShowingAddMember={setShowingAddMember} hasActiveSubscription={hasActiveSubscription} /> : <AddMemberForm setShowingAddMember={setShowingAddMember} />}
                 {organization?.memberships?.data?.map((membership) => (
                     <List.Item key={membership.id} title={membership.publicUserData?.firstName + " " + membership.publicUserData?.lastName} description={membership.publicUserData?.identifier} left={(props) => <List.Image source={{uri: membership.publicUserData?.imageUrl}} {...props} style={{...props.style, maxWidth: 40, maxHeight: 40, borderRadius: 999, borderWidth: 1, borderColor: "#ccc"}} />}
                     />
@@ -36,20 +40,13 @@ export default function AddFeed() {
     );
 }
 
-function AddMemberButton({setShowingAddMember}: {setShowingAddMember: (showing: boolean) => void}) {
+function AddMemberButton({setShowingAddMember, hasActiveSubscription}: {setShowingAddMember: (showing: boolean) => void, hasActiveSubscription: boolean}) {
     const organization = useOrganization({
         memberships: true,
     });
-
-    const {has} = useAuth();
-
-    const hasActiveSubscription = has?.({
-        plan: "cplan_30NoW9WpBWGnZGr3h1TSodO8ZlD"
-    });
-
-    console.log("hasActiveSubscription", hasActiveSubscription);
+    const canAddMember = organization.organization?.membersCount < organization.organization?.maxAllowedMemberships || !hasActiveSubscription;
     return (
-        <List.Item title={(!hasActiveSubscription ? "Subscribe to add members" : "Add Member")} description={(!hasActiveSubscription ? "Tap to subscribe" : null)} onPress={() => setShowingAddMember(true)} left={(props) => <List.Icon icon="account-plus" {...props} />} />
+        <List.Item title={(!hasActiveSubscription ? "Subscribe to add members" : canAddMember ? "Add Member" : "Max members reached")} description={(!hasActiveSubscription ? "Tap to subscribe" : null)} onPress={() => setShowingAddMember(true)} left={(props) => <List.Icon icon="account-plus" {...props} />} />
     );
 }
 function AddMemberForm({setShowingAddMember}: {setShowingAddMember: (showing: boolean) => void}) {

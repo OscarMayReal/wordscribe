@@ -218,3 +218,26 @@ export const createBookmark = async (listId: string, title: string, url: string)
         })
     })
 }
+
+export const searchBookmarks = async (query: string) => {
+    return new Promise(async (resolve, reject) => {
+        const auth = getClerkInstance();
+        console.log("Searching bookmarks");
+        while (!auth.loaded) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log("Waiting for auth");
+        }
+        console.log("Auth loaded");
+        auth.session?.getToken().then(async (token) => {
+            const response = await fetch(process.env.EXPO_PUBLIC_API_URL + "/v1/bookmarks/search?q=" + query, {
+                method: "GET",
+                redirect: "follow",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                },
+            })
+            const data = await response.json()
+            resolve(data);
+        })
+    })
+}

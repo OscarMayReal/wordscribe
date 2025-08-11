@@ -1,13 +1,16 @@
+import { createBookmark, useLists } from "@/lib/lists";
 import { deleteFeed, useFeedParser, useRSSFeedList } from "@/lib/rssfeed";
 import { router, Stack, useFocusEffect } from "expo-router";
 import React from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, Vibration, View } from "react-native";
-import { ActivityIndicator, Appbar, Button, Divider, List, useTheme } from "react-native-paper";
+import { Alert, Image, Linking, ScrollView, StyleSheet, Text, Vibration, View } from "react-native";
+import { ActivityIndicator, Appbar, Button, Divider, List, Menu, useTheme } from "react-native-paper";
+import { FeedItem } from "react-native-rss-parser";
 
 export default function Discover() {
     const theme = useTheme();
     const feeds = useRSSFeedList();
     const [isElevated, setIsElevated] = React.useState(false);
+    const lists = useLists();
     useFocusEffect(
         React.useCallback(() => {
             feeds.refresh();
@@ -38,7 +41,7 @@ export default function Discover() {
                 </Appbar.Header>}} />
                 {feeds.data.map((feed) => (
                     <View key={feed.id}>
-                        <FeedDiscoverView url={feed.url} id={feed.id} refresh={feeds.refresh} />
+                        <FeedDiscoverView url={feed.url} id={feed.id} refresh={feeds.refresh} listsHook={lists} />
                     </View>
                 ))}
             </ScrollView>
@@ -46,7 +49,7 @@ export default function Discover() {
     }
 }
 
-export function FeedDiscoverView({url, id, refresh}: {url: string, id: string, refresh: () => void}) {
+export function FeedDiscoverView({url, id, refresh, listsHook}: {url: string, id: string, refresh: () => void, listsHook: {refresh: () => void, data: any, loaded: boolean}}) {
     const feeddata = useFeedParser(url);
     const [expanded, setExpanded] = React.useState(true);
     return (
@@ -65,21 +68,41 @@ export function FeedDiscoverView({url, id, refresh}: {url: string, id: string, r
                 },
             ])}} onPress={() => setExpanded(!expanded)} left={props => <List.Icon icon="rss" {...props} />}>
                 {feeddata.data?.items?.map((item, index) => (
-                    index < 5 && <List.Item
-                        key={index}
-                        title={item.title}
-                        description={item.description}
-                        left={props => <List.Icon icon="pencil" {...props} />}
-                    />
+                    index < 5 && <DiscoverItem key={index} item={item} listsHook={listsHook} />
                 ))}
                 {feeddata.data?.items?.length > 5 && <List.Item
                     title="Show more"
                     left={props => <List.Icon icon="chevron-down" {...props} />}
-                    onPress={() => console.log("Show more")}
+                    onPress={() => router.push("/rssfeedpages/" + id + "/seemore")}
                 />}
             </List.Accordion>
             <Divider />
         </>
+    )
+}
+
+export function DiscoverItem({item, listsHook}: {item: FeedItem, listsHook: {refresh: () => void, data: any, loaded: boolean}}) {
+    var [visible, setVisible] = React.useState(false);
+    var [bookmarkVisible, setBookmarkVisible] = React.useState(false);
+    return (
+        <Menu anchor={<List.Item
+            title={item.title}
+            description={item.description}
+            left={props => <List.Icon icon="rss" {...props} />}
+            onPress={() => setVisible(true)}
+        />} visible={visible} onDismiss={() => setVisible(false)}>
+            <Menu.Item onPress={() => Linking.openURL(item.links[0].url)} title="Open" leadingIcon="open-in-new" />
+            <Divider />
+            <Menu anchor={<Menu.Item onPress={() => setBookmarkVisible(true)} title="Bookmark" leadingIcon="bookmark" />} visible={bookmarkVisible} onDismiss={() => setBookmarkVisible(false)}>
+                {listsHook.data?.map((list: any) => (
+                    <Menu.Item key={list.id} onPress={() => createBookmark(list.id, item.title, item.links[0].url).then(() => {
+                        listsHook.refresh();
+                        setVisible(false);
+                        setBookmarkVisible(false);
+                    })} title={list.name} leadingIcon="folder" />
+                ))}
+            </Menu>
+        </Menu>
     )
 }
 

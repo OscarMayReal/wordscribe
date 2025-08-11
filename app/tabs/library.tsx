@@ -1,10 +1,9 @@
 import { headerContext } from "@/app/tabs/_layout";
 import { createList, useLists } from "@/lib/lists";
-import { Image } from "expo-image";
 import { Tabs, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Dimensions, KeyboardAvoidingView, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { Appbar, Avatar, Button, FAB, List, Modal, Portal, Searchbar, TextInput, useTheme } from "react-native-paper";
+import { Appbar, Button, FAB, List, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Read() {
@@ -18,7 +17,7 @@ export default function Read() {
     const [createListPopupVisible, setCreateListPopupVisible] = useState(false);
     return (
         <View style={{flex: 1}}> 
-            <Tabs.Screen options={{header: () => <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}} />
+            <Tabs.Screen options={{header: () => <Header listsHook={lists} />}} />
             <ScrollView refreshControl={<RefreshControl refreshing={!lists.loaded} onRefresh={lists.refresh} />} onScroll={(e) => setHeaderIsElevated(e.nativeEvent.contentOffset.y > 1)} scrollEventThrottle={16} style={styles.scrollview}>
             {/* <ScrollView scrollEventThrottle={16}> */}
                 <List.Section>
@@ -46,23 +45,43 @@ export default function Read() {
     );
 }
 
-function Header({searchQuery, setSearchQuery}: {searchQuery: string, setSearchQuery: (query: string) => void}) {
+// function Header({searchQuery, setSearchQuery}: {searchQuery: string, setSearchQuery: (query: string) => void}) {
+//     const insets = useSafeAreaInsets();
+//     const {headerIsElevated, setHeaderIsElevated} = React.useContext(headerContext);
+//     const theme = useTheme();
+//     const router = useRouter();
+//     const screensize = Dimensions.get('window');
+//     return (
+//         <Appbar.Header statusBarHeight={insets.top} elevated={headerIsElevated}>
+//             <Appbar.Content title={<View style={styles.headerbar}>
+//                 <Image source={require("@/assets/images/logo.png")} style={{width: 22, height: 39.04, objectFit: "fill", marginRight: 14}} />
+//                 <Searchbar 
+//                     placeholder="Search" 
+//                     value={searchQuery} 
+//                     onChangeText={(query: string) => setSearchQuery(query)} 
+//                     style={{backgroundColor: theme.colors.elevation.level2, width: screensize.width - 118}}
+//                     editable={false}
+//                 />
+//                 <Avatar.Icon style={{marginLeft: 10}} size={40} icon="account" />
+//             </View>} />
+//         </Appbar.Header>
+//     );
+// }
+
+function Header({listsHook}: {listsHook: {refresh: () => void}}) {
     const insets = useSafeAreaInsets();
     const {headerIsElevated, setHeaderIsElevated} = React.useContext(headerContext);
     const theme = useTheme();
+    const router = useRouter();
     const screensize = Dimensions.get('window');
     return (
         <Appbar.Header statusBarHeight={insets.top} elevated={headerIsElevated}>
             <Appbar.Content title={<View style={styles.headerbar}>
-                <Image source={require("@/assets/images/logo.png")} style={{width: 22, height: 39.04, objectFit: "fill", marginRight: 14}} />
-                <Searchbar 
-                    placeholder="Search" 
-                    value={searchQuery} 
-                    onChangeText={(query: string) => setSearchQuery(query)} 
-                    style={{backgroundColor: theme.colors.elevation.level2, width: screensize.width - 118}}
-                />
-                <Avatar.Icon style={{marginLeft: 10}} size={40} icon="account" />
+                <Text variant="titleLarge">WordScribe</Text>
             </View>} />
+            <Appbar.Action icon="magnify" isLeading onPress={() => router.push("/librarypages/searchbookmarks")} />
+            <Appbar.Action icon="account" onPress={() => router.push("/tabs/account")} />
+            <Appbar.Action icon="refresh" onPress={() => listsHook.refresh()} />
         </Appbar.Header>
     );
 }

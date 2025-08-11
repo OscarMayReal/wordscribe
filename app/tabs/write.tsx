@@ -1,13 +1,14 @@
 import { useBlogPosts } from "@/lib/blog";
 import { useOrganization, useOrganizationList } from '@clerk/clerk-expo';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router, Tabs } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { router, Tabs, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Appbar, Avatar, Card, Divider, FAB, IconButton, List, Menu, Text, useTheme } from "react-native-paper";
+import { Appbar, Avatar, Button, Card, Divider, FAB, IconButton, List, Menu, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Write() {
+    const [_, forceUpdate] = useReducer(x => x + 1, 0);
     const theme = useTheme();
     const organizations = useOrganizationList({
         userMemberships: true,
@@ -41,6 +42,23 @@ export default function Write() {
             // Cleanup if needed
         };
     }, []);
+
+    useEffect(() => {
+        if (organizations.isLoaded && currentOrganization.isLoaded && !currentOrganization.organization && organizations.userMemberships?.data?.length > 0) {
+            organizations.setActive({organization: organizations.userMemberships?.data[0].organization});
+            forceUpdate();
+        }
+    }, [organizations, currentOrganization]);
+
+    useFocusEffect(
+        useCallback(() => {
+            if (currentOrganization?.isLoaded) {
+                posts.refresh();
+            } else {
+                forceUpdate();
+            }
+        }, [currentOrganization?.organization?.slug])
+    );
     
     // Header animation interpolation
     const headerOpacity = scrollY.interpolate({
@@ -56,6 +74,27 @@ export default function Write() {
     });
 
     const posts = useBlogPosts(currentOrganization?.organization?.slug);
+    useEffect(() => {
+        if (currentOrganization?.isLoaded) {
+            posts.refresh();
+        }
+    }, [currentOrganization?.organization?.slug]);
+    if (!currentOrganization?.isLoaded) {
+        return (
+            <View style={styles.container}>
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
+    if (!currentOrganization?.organization?.slug) {
+        return (
+            <View style={styles.noblog}>
+                <Text variant="titleLarge">You don't have a Blog</Text>
+                <Text variant="bodyMedium">Create one now to start writing!</Text>
+                <Button mode="contained" icon="plus" onPress={() => router.push('/blogadminpages/createblog')}>Create Blog</Button>
+            </View>
+        );
+    }
     return (
         <View style={styles.container}>
             <Tabs.Screen options={{headerShown: true, header: () => <Appbar.Header 
@@ -75,7 +114,7 @@ export default function Write() {
                         </Animated.View>
                     }
                 />
-                <Appbar.Action icon="account-group" onPress={() => router.push('/blogadminpages/managemembers')} />
+                {/* <Appbar.Action icon="account-group" onPress={() => router.push('/blogadminpages/managemembers')} /> */}
                 <Appbar.Action icon="cog" onPress={() => router.push('/blogadminpages/blogsettings')} />
             </Appbar.Header>}} />
             <Animated.ScrollView 
@@ -110,25 +149,26 @@ export default function Write() {
                             />
                         ))}
                         <Divider />
-                        <Menu.Item title="Create Blog" leadingIcon="plus" onPress={() => console.log('Create Blog')} />
+                        <Menu.Item title="Create Blog" leadingIcon="plus" onPress={() => {
+                            router.push('/blogadminpages/createblog');
+                            setMenuVisible(false);
+                        }} />
                     </Menu>
                 </Animated.View>
-                <List.Section>
+                {posts.data?.filter((post) => post.public).length > 0 && <List.Section>
                     <List.Subheader>Posts</List.Subheader>
-                    {posts.data.map((post) => (
+                    {posts.data.filter((post) => post.public).map((post) => (
                         <PostListItem key={post.id} type="post" post={post} />
                     ))}
-                    <ShowMoreListItem />
-                </List.Section>
-                <List.Section>
+                    {posts.data.filter((post) => post.public).length > 5 && <ShowMoreListItem />}
+                </List.Section>}
+                {posts.data?.filter((post) => !post.public).length > 0 && <List.Section>
                     <List.Subheader>Drafts</List.Subheader>
-                    <PostListItem type="draft" post={{id: "1", title: "Draft 1", updatedAt: "2025-08-01T00:00:00.000Z"}} />
-                    <PostListItem type="draft" post={{id: "2", title: "Draft 2", updatedAt: "2025-08-02T00:00:00.000Z"}} />
-                    <PostListItem type="draft" post={{id: "3", title: "Draft 3", updatedAt: "2025-08-03T00:00:00.000Z"}} />
-                    <PostListItem type="draft" post={{id: "4", title: "Draft 4", updatedAt: "2025-08-04T00:00:00.000Z"}} />
-                    <PostListItem type="draft" post={{id: "5", title: "Draft 5", updatedAt: "2025-08-05T00:00:00.000Z"}} />
-                    <ShowMoreListItem />
-                </List.Section>
+                    {posts.data.filter((post) => !post.public).map((post) => (
+                        <PostListItem key={post.id} type="draft" post={post} />
+                    ))}
+                    {posts.data.filter((post) => !post.public).length > 5 && <ShowMoreListItem />}
+                </List.Section>}
                 <FabSpacer />
             </Animated.ScrollView>
             <FAB
@@ -136,7 +176,7 @@ export default function Write() {
                 style={styles.fab}
                 size="medium"
                 label="New Post"
-                onPress={() => router.push('/blogadminpages/composepost')}
+                onPress={() => router.push('/blogadminpages/createpost')}
             />
         </View>
     );
@@ -205,5 +245,11 @@ var styles = StyleSheet.create({
     },
     fabSpacer: {
         height: 70,
+    },
+    noblog: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 16,
     },
 });
