@@ -29,7 +29,7 @@ export default function RootLayout() {
         router.replace("/");
       },
     }}>
-      <ClerkProvider tokenCache={tokenCache}>
+      <ClerkProvider tokenCache={tokenCache} publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
         <PaperProvider theme={paperTheme}>
           <StackHolder />
         </PaperProvider>
