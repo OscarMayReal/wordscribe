@@ -51,7 +51,7 @@ export default function SignIn() {
                     <TextInput autoCapitalize="none" mode="outlined" label="Username" style={styles.input} value={username} onChangeText={setUsername} />
                     <TextInput autoCapitalize="none" mode="outlined" label="Email" style={styles.input} value={email} onChangeText={setEmail} />
                     <TextInput autoCapitalize="none" mode="outlined" label="Password" secureTextEntry style={styles.input} value={password} onChangeText={setPassword} />
-                    <Button style={styles.button} icon="login" onPress={doSignIn} mode="contained" disabled={firstName === "" || lastName === "" || username === "" || email === "" || password === ""}>Sign Up</Button>
+                    <Button style={styles.button} icon="login" onPress={doSignIn} mode="contained" disabled={firstName === "" || lastName === "" || username === "" || email === "" || password === "" || password.length < 8}>Sign Up</Button>
                     <Text>Already have an account?</Text>
                     <Button style={styles.button} icon="login" onPress={() => navigation.navigate("sign-in")} mode="outlined">Sign In</Button>
                 </View>

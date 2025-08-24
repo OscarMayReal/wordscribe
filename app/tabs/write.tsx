@@ -2,7 +2,7 @@ import { useBlogPosts } from "@/lib/blog";
 import { useOrganization, useOrganizationList } from '@clerk/clerk-expo';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Tabs, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Appbar, Avatar, Button, Card, Divider, FAB, IconButton, List, Menu, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,6 +14,7 @@ export default function Write() {
         userMemberships: true,
         active: true,
     });
+
     const currentOrganization = useOrganization();
     const insets = useSafeAreaInsets();
     const [menuVisible, setMenuVisible] = useState(false);

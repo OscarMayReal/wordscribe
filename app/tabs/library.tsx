@@ -2,7 +2,7 @@ import { headerContext } from "@/app/tabs/_layout";
 import { createList, useLists } from "@/lib/lists";
 import { Tabs, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Dimensions, KeyboardAvoidingView, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Dimensions, KeyboardAvoidingView, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { Appbar, Button, FAB, List, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -18,8 +18,7 @@ export default function Read() {
     return (
         <View style={{flex: 1}}> 
             <Tabs.Screen options={{header: () => <Header listsHook={lists} />}} />
-            <ScrollView refreshControl={<RefreshControl refreshing={!lists.loaded} onRefresh={lists.refresh} />} onScroll={(e) => setHeaderIsElevated(e.nativeEvent.contentOffset.y > 1)} scrollEventThrottle={16} style={styles.scrollview}>
-            {/* <ScrollView scrollEventThrottle={16}> */}
+            {lists.loaded && lists.data?.length > 0 && <ScrollView refreshControl={<RefreshControl refreshing={!lists.loaded} onRefresh={lists.refresh} />} onScroll={(e) => setHeaderIsElevated(e.nativeEvent.contentOffset.y > 1)} scrollEventThrottle={16} style={styles.scrollview}>
                 <List.Section>
                     <List.Subheader>Your Lists</List.Subheader>
                     {lists.data?.map((list) => (
@@ -32,7 +31,15 @@ export default function Read() {
                         />
                     ))}
                 </List.Section>
-            </ScrollView>
+            </ScrollView>}
+            {!lists.loaded && <View style={styles.placeholder}>
+                <ActivityIndicator />
+            </View>}
+            {lists.loaded && lists.data?.length === 0 && <View style={styles.placeholder}>
+                <Text variant="titleLarge">You don't have any Lists</Text>
+                <Text variant="bodyMedium">Create one now to start bookmarking!</Text>
+                <Button mode="contained" icon="plus" onPress={() => setCreateListPopupVisible(true)}>Create List</Button>
+            </View>}
             <FAB
                 icon="plus"
                 style={styles.fab}
@@ -150,5 +157,11 @@ var styles = StyleSheet.create({
     headerbar: {
         flexDirection: "row",
         alignItems: "center",
+    },
+    placeholder: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 16,
     },
 });

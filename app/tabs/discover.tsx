@@ -2,7 +2,7 @@ import { createBookmark, useLists } from "@/lib/lists";
 import { deleteFeed, useFeedParser, useRSSFeedList } from "@/lib/rssfeed";
 import { router, Stack, useFocusEffect } from "expo-router";
 import React from "react";
-import { Alert, Image, Linking, ScrollView, StyleSheet, Text, Vibration, View } from "react-native";
+import { Alert, Image, Linking, RefreshControl, ScrollView, StyleSheet, Text, Vibration, View } from "react-native";
 import { ActivityIndicator, Appbar, Button, Divider, List, Menu, useTheme } from "react-native-paper";
 import { FeedItem } from "react-native-rss-parser";
 
@@ -14,6 +14,7 @@ export default function Discover() {
     useFocusEffect(
         React.useCallback(() => {
             feeds.refresh();
+            setIsElevated(false);
         }, [])
     );
     console.log(feeds);
@@ -34,7 +35,7 @@ export default function Discover() {
         )
     } else {
         return (
-            <ScrollView onScroll={(e) => setIsElevated(e.nativeEvent.contentOffset.y > 1)} scrollEventThrottle={16}>
+            <ScrollView refreshControl={<RefreshControl refreshing={!feeds.loaded} onRefresh={feeds.refresh} />} onScroll={(e) => setIsElevated(e.nativeEvent.contentOffset.y > 1)} scrollEventThrottle={16}>
                 <Stack.Screen options={{headerShown: true, header: () => <Appbar.Header elevated={isElevated}>
                     <Appbar.Content title="Discover" />
                     <Appbar.Action icon="plus" onPress={() => {router.push("/discoverpages/addfeed")}} />
@@ -66,7 +67,7 @@ export function FeedDiscoverView({url, id, refresh, listsHook}: {url: string, id
                         refresh();
                     }),
                 },
-            ])}} onPress={() => setExpanded(!expanded)} left={props => <List.Icon icon="rss" {...props} />}>
+            ])}} onPress={() => setExpanded(!expanded)} left={props => <List.Image source={{uri: feeddata.data?.image?.url}} {...props} style={[{maxWidth: 25, maxHeight: 25}, props.style]} />}>
                 {feeddata.data?.items?.map((item, index) => (
                     index < 5 && <DiscoverItem key={index} item={item} listsHook={listsHook} />
                 ))}
